@@ -15,6 +15,7 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _answered = false;
   String _selectedAnswer = "";
   String _feedbackText = "";
+
   @override
   void initState() {
     super.initState();
@@ -22,22 +23,18 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> _loadQuestions() async {
-    try {
-      final questions = await ApiService.fetchQuestions();
-      setState(() {
-        _questions = questions;
-        _loading = false;
-      });
-    } catch (e) {
-      print(e);
-      // Handle error appropriately
-    }
+    final questions = await ApiService.fetchQuestions();
+    setState(() {
+      _questions = questions;
+      _loading = false;
+    });
   }
 
   void _submitAnswer(String selectedAnswer) {
     setState(() {
       _answered = true;
       _selectedAnswer = selectedAnswer;
+
       final correctAnswer = _questions[_currentQuestionIndex].correctAnswer;
       if (selectedAnswer == correctAnswer) {
         _score++;
@@ -61,25 +58,28 @@ class _QuizScreenState extends State<QuizScreen> {
     return ElevatedButton(
       onPressed: _answered ? null : () => _submitAnswer(option),
       child: Text(option),
-      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+      style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 3, 151, 243)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
+
     if (_currentQuestionIndex >= _questions.length) {
       return Scaffold(
         body: Center(
-          child: Text(
-            'Quiz Finished! Your Score: $_score/${_questions.length}',
-          ),
+          child: Text('Quiz Finished! Your Score: $_score/${_questions.length}'),
         ),
       );
     }
+
     final question = _questions[_currentQuestionIndex];
+
     return Scaffold(
       appBar: AppBar(title: Text('Quiz App')),
       body: Padding(
@@ -87,31 +87,16 @@ class _QuizScreenState extends State<QuizScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Question ${_currentQuestionIndex + 1}/${_questions.length}',
-              style: TextStyle(fontSize: 20),
-            ),
+            Text('Question ${_currentQuestionIndex + 1}/${_questions.length}', style: TextStyle(fontSize: 20)),
             SizedBox(height: 16),
             Text(question.question, style: TextStyle(fontSize: 18)),
             SizedBox(height: 16),
-            ...question.options.map((option) => _buildOptionButton(option)),
+            ...question.options.map(_buildOptionButton),
             SizedBox(height: 20),
             if (_answered)
-              Text(
-                _feedbackText,
-                style: TextStyle(
-                  fontSize: 16,
-                  color:
-                      _selectedAnswer == question.correctAnswer
-                          ? Colors.green
-                          : Colors.red,
-                ),
-              ),
+              Text(_feedbackText, style: TextStyle(fontSize: 16, color: _selectedAnswer == question.correctAnswer ? Colors.green : Colors.red)),
             if (_answered)
-              ElevatedButton(
-                onPressed: _nextQuestion,
-                child: Text('Next Question'),
-              ),
+              ElevatedButton(onPressed: _nextQuestion, child: Text('Next Question')),
           ],
         ),
       ),
